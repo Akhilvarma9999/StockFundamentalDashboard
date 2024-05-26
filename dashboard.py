@@ -1,8 +1,10 @@
 import streamlit as st
-import requests
-import config
+import requests, redis
+import config, json
 from iex import IEXStock
 from helper import format_number
+
+redis_client = redis.Redis(host='localhost', port=6379, db=0)
 
 symbol = st.sidebar.text_input("Symbol",value="MSFT")
 stock=IEXStock(config.IEX_API_TOKEN,symbol)
@@ -13,7 +15,15 @@ st.title(screen)
 
 
 if screen == "Overview":
-    logo =stock.get_logo()
+    logo_key=f"{symbol}_logo"
+    logo = redis_client.get(logo_key)
+    if logo is None:
+        print("could not find logo in cache,retreving from IEX cloud")
+        logo =stock.get_logo()
+        redis_client.set(logo_key,json.dumps(logo))
+    else:
+        print("Found logo in Cache,serving from redis")
+        logo=json.loads(logo)
     company_info=stock.get_company_info()
     print(company_info)
     

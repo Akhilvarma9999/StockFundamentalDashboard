@@ -17,4 +17,19 @@ class IEXStock:
         url=f"{self.BASE_URL}/balance_sheet/{self.symbol}?token={self.token}"
         r=requests.get(url)
         return r.json()
+    def get_company_news(self, last=10):
+        url = f"{self.BASE_URL}/news/{self.symbol}?range=last-week&token={self.token}"
+        r = requests.get(url)
+        
+        return r.json()
+    def get_fundamentals(self, period='quarterly', last=4):
+        url = f"{self.BASE_URL}/fundamentals/{self.symbol}/{period}?last={last}&token={self.token}"
+        r = requests.get(url)
+        
+        return r.json()
+    def get_dividends(self, last=4):
+        url = f"{self.BASE_URL}/advanced_dividends/{self.symbol}?last={last}&token={self.token}"
+        r = requests.get(url)
+        
+        return r.json()
         
