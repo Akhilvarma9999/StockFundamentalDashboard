@@ -1,4 +1,4 @@
-import requests
+import requests,json
 
 class IEXStock:
     def __init__(self,token,symbol):
@@ -9,10 +9,16 @@ class IEXStock:
         url=f"https://api.iex.cloud/v1/stock/{self.symbol}/logo?token={self.token}"
         r=requests.get(url)
         return r.json()
+    
     def get_company_info(self):
-        url=f"{self.BASE_URL}/company/{self.symbol}?token={self.token}"
-        r=requests.get(url)
-        return r.json()
+        url = f"{self.BASE_URL}/stock/{self.symbol}/company?token={self.token}"
+        r = requests.get(url)
+        if r.status_code == 200:
+            try:
+                return r.json()
+            except json.JSONDecodeError:
+                return None
+        return None
     def get_stats(self):
         url=f"{self.BASE_URL}/balance_sheet/{self.symbol}?token={self.token}"
         r=requests.get(url)

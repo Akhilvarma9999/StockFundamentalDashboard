@@ -3,6 +3,7 @@ import requests, redis
 import config, json
 from iex import IEXStock
 from helper import format_number
+from datetime import timedelta,datetime
 
 redis_client = redis.Redis(host='localhost', port=6379, db=0)
 
@@ -24,32 +25,48 @@ if screen == "Overview":
     else:
         print("Found logo in Cache,serving from redis")
         logo=json.loads(logo)
-    company_info=stock.get_company_info()
-    print(company_info)
     
 
-    if company_info and isinstance(company_info, list) and len(company_info) > 0:
-    # Access the first item in the list
-        info = company_info[0]
+    company_key = f"{symbol}_compnay"
+    company = redis_client.get(company_key)
+    if company is None:
+        print("getting info from IEX Cloud")
+        company=stock.get_company_info()
+        if company:
+            redis_client.set(company_key,json.dumps(company))
+            redis_client.expire(company_key,timedelta(seconds=30))
+        else :
+            print("Error retrieving company info from IEX Cloud")
+            company = []
+    else:    
+        print("getting info from cache")
+        company = json.loads(company)
+    
+    
+    
+        
+    if company and isinstance(company, list) and len(company) > 0:
+        # Access the first item in the list
+            info = company[0]
 
-        col1, col2 = st.columns([1, 4])
-        with col1:
-            # Assuming 'logo' contains 'url' directly
-            if 'url' in logo:
-                st.image(logo['url'])
-            else:
-                st.error("Logo URL not found")
-        with col2:
-            st.subheader("Description")
-            st.write(info.get('longDescription', 'Description not available'))
+            col1, col2 = st.columns([1, 4])
+            with col1:
+                # Assuming 'logo' contains 'url' directly
+                if 'url' in logo:
+                    st.image(logo['url'])
+                else:
+                    st.error("Logo URL not found")
+            with col2:
+                st.subheader("Description")
+                st.write(info.get('longDescription', 'Description not available'))
 
-            st.subheader("Industry")
-            st.write(info.get('industry', 'Industry not available'))
+                st.subheader("Industry")
+                st.write(info.get('industry', 'Industry not available'))
 
-            st.subheader("CEO")
-            st.write(info.get('ceo', 'CEO not available'))
+                st.subheader("CEO")
+                st.write(info.get('ceo', 'CEO not available'))
     else:
-        st.error("company_info is not a list or it's empty")
+            st.error("company_info is not a list or it's empty")
 
 
     
